@@ -1,4 +1,4 @@
-![](https://github.com/pragyy/datascience-readme-template/blob/main/Headerheader.jpg)
+![](https://github.com/Ambigapathi-V/Q-A-Chatbot/blob/main/OIP.jpeg)
 
 # Q&A Chatbot
 
@@ -28,7 +28,7 @@ Insert gif or link to demo here.
 
 ## Screenshots
 
-![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+![App Screenshot](https://github.com/Ambigapathi-V/Q-A-Chatbot/blob/main/GenAI.png)
 
 # Installation and Setup
 
