@@ -1,56 +1,66 @@
 import streamlit as st
-import groq
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.llms.ollama import Ollama
 import os
 from dotenv import load_dotenv
 
-load_dotenv() 
+# Load environment variables
+load_dotenv()
 
-## Langsmith Tracking
+# Langsmith Tracking
 os.environ['LANGCHAIN_API_KEY'] = os.getenv('LANGCHAIN_API_KEY')
 os.environ['LANGCHAIN_TRACKING_V2'] = 'true'
-os.environ['LANGCHAIN_PROJECT'] = 'Q&A Chatbot with OLLAMA'
+os.environ['LANGCHAIN_PROJECT'] = "Q and A Chatbot"
+groq_api_key = os.getenv('GROQ_API_KEY')
+
+# Check if API key exists
+if not groq_api_key:
+    st.error("Error: Missing GROQ API Key. Please check your .env file.")
+    st.stop()
 
 # Prompt Template
-Prompt = ChatPromptTemplate.from_messages([
-    ('system', 'You are the helpful assistant. Please respond to the user queries.'),
+prompt = ChatPromptTemplate.from_messages([
+    ('system', 'You are a helpful AI assistant. Please provide concise and accurate responses.'),
     ('user', 'Question: {question}')
 ])
 
-def generate_response(question, engine, temperature, ):
-    llm = Ollama(model=engine, temperature=temperature)
+def generate_response(question, llm, temperature, max_tokens):
+    """Generate AI response using LangChain and Groq model"""
+    llm = ChatGroq(model=llm, groq_api_key=groq_api_key)
     output_parser = StrOutputParser()
-    chain = Prompt | llm | output_parser
+    chain = prompt | llm | output_parser
     answer = chain.invoke({'question': question})
     return answer
 
-## Title of the app
-st.title('🌟 Enhanced Q&A Chatbot with Groq 🌟')
+# Sidebar - Model Selection & Parameters
+st.sidebar.title("🔧 Settings")
+llm = st.sidebar.selectbox("🤖 Select an AI Model", ['gemma2-9b-it', 'deepseek-r1-distill-llama-70b', 'llama-3.1-8b-instant'])
+temperature = st.sidebar.slider("🎚️ Temperature", min_value=0.0, max_value=1.0, value=0.7, step=0.1)
+max_tokens = st.sidebar.number_input("📏 Max Tokens", min_value=50, max_value=500, value=150)
 
-## Sidebar for settings
-st.sidebar.title('🛠️ Settings')
+# Main UI
+st.title("💬 AI-Powered Q&A Chatbot")
+st.write("Ask me anything, and I'll provide the best possible answer!")
 
-## Dropdown to select various Ollama models
-llm = st.sidebar.selectbox(
-    'Select a Ollama model', 
-    ['llama3.2:1b', 
-     'gemma2:2b']
-)
+# Input field for user question
+user_input = st.text_input("✍️ Your Question:", placeholder="Type your question here...")
 
-## Adjust response parameters
-temperature = st.sidebar.slider('Temperature', min_value=0.0, max_value=1.0, value=0.7, step=0.1)
-max_tokens = st.sidebar.number_input('Max Tokens', min_value=50, max_value=300, value=150)
-
-## Main Interface for user input
-st.write('### 🤖 Ask me anything!')
-user_input = st.text_input('You:', placeholder='Type your question here...')
-
+# Process user input
 if user_input:
-    response = generate_response(user_input, llm, temperature)
-    st.write('### 🤔 Response:')
-    st.success(response)  # Display the response as a success message
+    with st.spinner("Thinking... 🤖"):
+        response = generate_response(user_input, llm, temperature, max_tokens)
+    
+    # Display response with collapsible expander
+    with st.expander("🔍 Click to view answer"):
+        st.write(response)
 else:
-    st.warning('Please provide input')  # Prompt for user input
+    st.info("💡 Tip: Enter a question above to get started!")
+
+# Footer
+st.markdown(
+    """
+    ---
+    💡 *Powered by Groq AI & LangChain | Created with ❤️ using Streamlit*  
+    """, unsafe_allow_html=True
+)
